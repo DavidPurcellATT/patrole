@@ -1,45 +1,17 @@
 
-=========
-MARGARINE
-=========
+=======
+PATROLE
+=======
 
-Margarine is a set of utilities to test Role Base Access
+Patrole is a Tempest plugin to test Role Base Access
 Control for OpenStack API's.
-
-* Tempest Best Practices: https://wiki.web.att.com/display/CCPdev/Tempest+Best+Practices
 
 Overview
 ########
 
 The standard Openstack API test does not test RBAC capabilities at all but
-focuses on testing API functionality. So we wanted to create a way to test
-APIs RBAC while using some of the existing tempest API code base.
-
-Design Principles
-#################
-Tempest RBAC Design Principles that we strive to live by are:
-
-* Use Python Decorator to handle the exception thrown by roles that
-  do not have access to the APIs and treat the exception as an
-  expected response.
-* Create standard utiliy to handle items like:
-
-  - Switch User roles from admin to the testing role
-* Only test access to the API not the functionality of the API
-* Tempest RBAC test should only run if rbac_flag is enabled.
-* Tempest test should make sure when the rbac_flag is enabled and
-  that the tempest_roles = admin.  This makes sure that the
-  credentials that will be used to setup and tear down all test cases
-  will have access to perform the necessary actions against the resources.
-* Tempest RBAC test should ensure that the tempest standards are followed.
-
-  - Follow Design Principles http://docs.openstack.org/developer/tempest/overview.html
-  - Follow Tempest Coding Guide http://docs.openstack.org/developer/tempest/HACKING.html
-* All RBAC test case methods should have the following decorators
-
-  - @rbac_rule_validation.action(...)
-  - @test.idempotent_id(...) see Test Identification with Idempotent ID
-    at http://docs.openstack.org/developer/tempest/HACKING.html
+focuses on testing API functionality. Patrole is framework to test
+RBAC enforcement of APIs while using some of the existing tempest API code base.
 
 Configuration Information
 #########################
@@ -52,7 +24,7 @@ the tempest.conf file.
 
 #. [auth] section updates ::
 
-       # Users create for a tempest run will be admin so they have access to all APIs
+       # Set tempest role to admin so all APIs are accessible
        tempest_roles = admin
 
        # Allows test cases to create/destroy tenants and users. This
