@@ -25,34 +25,46 @@ class RBACUtilsTest(base.TestCase):
         super(RBACUtilsTest, self).setUp()
         self.rbac_utils = utils.RbacUtils
 
+    get_response = 200
+    put_response = 204
+    delete_response = 204
+    response_data = json.dumps({"roles": []})
+
+    def _response_side_effect(self, action, *args, **kwargs):
+        response = mock.MagicMock()
+        if action == "GET":
+            response.status = self.get_response
+            response.data = self.response_data
+        if action == "PUT":
+            response.status = self.put_response
+        if action == "DELETE":
+            response.status = self.delete_response
+        return response
+
     @mock.patch('patrole.rbac_utils.CONF')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_get_roles_none(self, urllib3, config):
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_get_roles(self, http, config):
         self.rbac_utils.dictionary = {}
 
         caller = mock.Mock()
         caller.admin_client.token = "test_token"
 
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({'roles': []})
-        urllib3.get.return_value = response
+        http.request.side_effect = self._response_side_effect
+
         self.assertEqual({'admin_role_id': None, 'rbac_role_id': None},
                          self.rbac_utils.get_roles(caller))
 
     @mock.patch('patrole.rbac_utils.CONF')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_get_roles_member(self, urllib3, config):
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_get_roles_member(self, http, config):
         self.rbac_utils.dictionary = {}
 
         caller = mock.Mock()
         caller.admin_client.token = "test_token"
 
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({'roles': [{'name': '_member_',
+        self.response_data = json.dumps({'roles': [{'name': '_member_',
                                     'id': '_member_id'}]})
-        urllib3.get.return_value = response
+        http.request.side_effect = self._response_side_effect 
 
         config.rbac.rbac_role = '_member_'
 
@@ -61,18 +73,17 @@ class RBACUtilsTest(base.TestCase):
                          self.rbac_utils.get_roles(caller))
 
     @mock.patch('patrole.rbac_utils.CONF')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_get_roles_admin(self, urllib3, config):
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_get_roles_admin(self, http, config):
         self.rbac_utils.dictionary = {}
 
         caller = mock.Mock()
         caller.admin_client.token = "test_token"
 
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps({'roles': [{'name': 'admin',
+        self.response_data = json.dumps({'roles': [{'name': 'admin',
                                     'id': 'admin_id'}]})
-        urllib3.get.return_value = response
+
+        http.request.side_effect = self._response_side_effect
 
         config.rbac.rbac_role = 'admin'
 
@@ -81,19 +92,17 @@ class RBACUtilsTest(base.TestCase):
                          self.rbac_utils.get_roles(caller))
 
     @mock.patch('patrole.rbac_utils.CONF')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_get_roles_admin_not_role(self, urllib3, config):
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_get_roles_admin_not_role(self, http, config):
         self.rbac_utils.dictionary = {}
 
         caller = mock.Mock()
         caller.admin_client.token = "test_token"
 
-        response = mock.Mock()
-        response.status_code = 200
-        response.text = json.dumps(
+        self.response_data = json.dumps(
             {'roles': [{'name': 'admin', 'id': 'admin_id'}]}
         )
-        urllib3.get.return_value = response
+        http.request.side_effect = self._response_side_effect
 
         self.assertEqual({'admin_role_id': 'admin_id', 'rbac_role_id': None},
                          self.rbac_utils.get_roles(caller))
@@ -106,27 +115,26 @@ class RBACUtilsTest(base.TestCase):
                          self.rbac_utils.get_roles(None))
 
     @mock.patch('patrole.rbac_utils.CONF')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_get_roles_response_404(self, urllib3, config):
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_get_roles_response_404(self, http, config):
         self.rbac_utils.dictionary = {}
 
         caller = mock.Mock()
         caller.admin_client.token = "test_token"
 
-        response = mock.Mock()
-        response.status_code = 404
-        response.text = json.dumps({'roles': []})
-        urllib3.get.return_value = response
+        http.request.side_effect = self._response_side_effect
+        self.get_response = 404
 
         self.assertRaises(StandardError, self.rbac_utils.get_roles, caller)
+        self.get_response = 200
 
     def test_RBAC_utils_switch_roles_none(self):
         self.assertIsNone(self.rbac_utils.switch_role(None))
 
     @mock.patch('patrole.rbac_utils.CONF')
     @mock.patch('patrole.rbac_utils.RbacUtils.get_roles')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_switch_roles_member(self, urllib3,
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_switch_roles_member(self, http,
                                             get_roles, config):
         get_roles.return_value = {'admin_role_id': None,
                                   'rbac_role_id': '_member_id'}
@@ -137,24 +145,14 @@ class RBACUtilsTest(base.TestCase):
         self.admin_client = mock.Mock()
         self.admin_client.token = "admin_token"
 
-        response_204 = mock.Mock()
-        response_204.status_code = 204
-
-        response_200 = mock.Mock()
-        response_200.status_code = 200
-        response_200.text = json.dumps({'roles': [{'id': 'id'}]})
-
-        urllib3.put.side_effect = None
-        urllib3.put.return_value = response_204
-        urllib3.delete.return_value = response_204
-        urllib3.get.return_value = response_200
+        http.request.side_effect = self._response_side_effect
 
         self.assertIsNone(self.rbac_utils.switch_role(self, "_member_"))
 
     @mock.patch('patrole.rbac_utils.CONF')
     @mock.patch('patrole.rbac_utils.RbacUtils.get_roles')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_switch_roles_false(self, urllib3,
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_switch_roles_false(self, http,
                                            get_roles, config):
         get_roles.return_value = {'admin_role_id': None,
                                   'rbac_role_id': '_member_id'}
@@ -165,24 +163,14 @@ class RBACUtilsTest(base.TestCase):
         self.admin_client = mock.Mock()
         self.admin_client.token = "admin_token"
 
-        response_204 = mock.Mock()
-        response_204.status_code = 204
-
-        response_200 = mock.Mock()
-        response_200.status_code = 200
-        response_200.text = json.dumps({'roles': [{'id': 'id'}]})
-
-        urllib3.put.side_effect = None
-        urllib3.put.return_value = response_204
-        urllib3.delete.return_value = response_204
-        urllib3.get.return_value = response_200
+        http.request.side_effect = self._response_side_effect
 
         self.assertIsNone(self.rbac_utils.switch_role(self, False))
 
     @mock.patch('patrole.rbac_utils.CONF')
     @mock.patch('patrole.rbac_utils.RbacUtils.get_roles')
-    @mock.patch('patrole.rbac_utils.urllib3')
-    def test_RBAC_utils_switch_roles_get_roles_fails(self, urllib3,
+    @mock.patch('patrole.rbac_utils.http')
+    def test_RBAC_utils_switch_roles_get_roles_fails(self, http,
                                                      get_roles, config):
         get_roles.return_value = {'admin_role_id': None,
                                   'rbac_role_id': '_member_id'}
@@ -193,20 +181,12 @@ class RBACUtilsTest(base.TestCase):
         self.admin_client = mock.Mock()
         self.admin_client.token = "admin_token"
 
-        response_204 = mock.Mock()
-        response_204.status_code = 204
-
-        response_200 = mock.Mock()
-        response_200.status_code = 404
-        response_200.text = json.dumps({'roles': [{'id': 'id'}]})
-
-        urllib3.put.side_effect = None
-        urllib3.put.return_value = response_204
-        urllib3.delete.return_value = response_204
-        urllib3.get.return_value = response_200
+        self.get_response = 404
 
         self.assertRaises(StandardError, self.rbac_utils.switch_role, self,
                           False)
+
+        self.get_response = 200
 
     @mock.patch('patrole.rbac_utils.RbacUtils.get_roles')
     def test_RBAC_utils_switch_roles_exception(self, get_roles):

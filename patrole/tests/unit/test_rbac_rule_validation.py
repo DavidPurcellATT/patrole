@@ -25,14 +25,14 @@ from tempest.tests import base
 class RBACRuleValidationTest(base.TestCase):
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_happy_path(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
         mock_function = mock.Mock()
         wrapper = decorator(mock_function)
         wrapper()
 
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_forbidden(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
         mock_function = mock.Mock()
         mock_function.side_effect = exceptions.Forbidden
         wrapper = decorator(mock_function)
@@ -40,7 +40,7 @@ class RBACRuleValidationTest(base.TestCase):
 
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_rbac_action_failed(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
         mock_function = mock.Mock()
         mock_function.side_effect = rbac_exceptions.RbacActionFailed
         wrapper = decorator(mock_function)
@@ -48,7 +48,7 @@ class RBACRuleValidationTest(base.TestCase):
 
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_not_allowed(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
 
         mock_function = mock.Mock()
         wrapper = decorator(mock_function)
@@ -57,11 +57,11 @@ class RBACRuleValidationTest(base.TestCase):
         mock_permission.get_permission.return_value = False
         mock_auth.return_value = mock_permission
 
-        self.assertRaises(StandardError, wrapper)
+        self.assertRaises(rbac_exceptions.RbacOverPermission, wrapper)
 
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_forbidden_not_allowed(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
 
         mock_function = mock.Mock()
         mock_function.side_effect = exceptions.Forbidden
@@ -75,7 +75,7 @@ class RBACRuleValidationTest(base.TestCase):
 
     @mock.patch('patrole.rbac_auth.RbacAuthority')
     def test_RBAC_rv_rbac_action_failed_not_allowed(self, mock_auth):
-        decorator = rbac_rv.action("", "")
+        decorator = rbac_rv.action("", "", "")
 
         mock_function = mock.Mock()
         mock_function.side_effect = rbac_exceptions.RbacActionFailed
