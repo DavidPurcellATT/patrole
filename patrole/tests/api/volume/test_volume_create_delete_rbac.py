@@ -16,20 +16,17 @@
 import logging
 
 from patrole.tests.api import rbac_base as base
-
 from patrole import rbac_exceptions
 from patrole import rbac_rule_validation
 from patrole.rbac_utils import rbac_utils
+from patrole import test
 
 from tempest import config
+from tempest.lib.common.utils import test_utils
+from tempest.lib import exceptions
 
 #TODO: DON'T USE TEMPEST.COMMON
 from tempest.common import waiters
-
-from patrole import test
-
-from tempest.lib.common.utils import test_utils
-from tempest.lib import exceptions
 
 CONF = config.CONF
 LOG = logging.getLogger(__name__)

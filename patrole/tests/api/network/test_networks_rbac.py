@@ -103,42 +103,37 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
         self.assertEqual('ACTIVE', network['status'])
         return network
 
+    def tearDown(self):
+        rbac_utils.switch_role(self, switchToRbacRole=False)
+        super(RbacNetworksTest, self).tearDown()
+
+    def setUp(self):
+        rbac_utils.switch_role(self, switchToRbacRole=False)
+        super(RbacNetworksTest, self).setUp()
+
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="create_network")
     @test.idempotent_id('95b9baab-1ece-4e2b-89c8-8d671d974e54')
     def test_create_network(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network()
-            self.assertIsNotNone(network['id'])
-
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network()
+        self.assertIsNotNone(network['id'])
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="create_network:shared")
     @test.idempotent_id('ccabf2a9-28c8-44b2-80e6-ffd65d43eef2')
     def test_create_network_shared(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network(shared=True)
-            self.assertIsNotNone(network['id'])
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network(shared=True)
+        self.assertIsNotNone(network['id'])
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="create_network:router:external")
     @test.idempotent_id('51adf2a7-739c-41e0-8857-3b4c460cbd24')
     def test_create_network_router_external(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network(router_external=True)
-            self.assertIsNotNone(network['id'])
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network(router_external=True)
+        self.assertIsNotNone(network['id'])
 
 #    @rbac_rule_validation.action(component="Network", service="neutron",
 #                                 rule="create_network:router:private")
@@ -156,13 +151,9 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
                                  rule="create_network:provider:network_type")
     @test.idempotent_id('3c42f7b8-b80c-44ef-8fa4-69ec4b1836bc')
     def test_create_network_provider_network_type(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network(provider_network_type='vxlan')
-            self.assertIsNotNone(network['id'])
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network(provider_network_type='vxlan')
+        self.assertIsNotNone(network['id'])
 
     @testtools.skipIf(test.is_extension_enabled('contrail', 'network'),
                       "Contrail extension enabled. Test skipped")
@@ -171,14 +162,10 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
         rule="create_network:provider:physical_network")
     @test.idempotent_id('f458033b-2d52-4fd1-86db-e31e111d6fac')
     def test_create_network_provider_physical_network(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network(provider_network_type='flat',
-                                           provider_physical_network='ph-eth0')
-            self.assertIsNotNone(network['id'])
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network(provider_network_type='flat',
+                                       provider_physical_network='ph-eth0')
+        self.assertIsNotNone(network['id'])
 
     @testtools.skipIf(test.is_extension_enabled('contrail', 'network'),
                       "Contrail extension enabled. Test skipped")
@@ -187,14 +174,10 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
         rule="create_network:provider:segmentation_id")
     @test.idempotent_id('b9decb7b-68ef-4504-b99b-41edbf7d2af5')
     def test_create_network_provider_segmentation_id(self):
-
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            network = self._create_network(provider_network_type='vxlan',
-                                           provider_segmentation_id=200)
-            self.assertIsNotNone(network['id'])
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        network = self._create_network(provider_network_type='vxlan',
+                                       provider_segmentation_id=200)
+        self.assertIsNotNone(network['id'])
 
     # provider:network_type, provider:physical_network, and
     # provider:segmentation are not being tested for the following reason:
@@ -235,55 +218,42 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
                                  rule="update_network")
     @test.idempotent_id('6485bb4e-e110-48ae-83e1-3ec8b40c3107')
     def test_update_network(self):
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        updated_network = self._update_network(admin=False)
+        self.assertEqual(updated_network['admin_state_up'], False)
 
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            updated_network = self._update_network(admin=False)
-            self.assertEqual(updated_network['admin_state_up'], False)
-
-            # Revert back to True
-            updated_network = self._update_network(admin=True)
-            self.assertEqual(updated_network['admin_state_up'], True)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        # Revert back to True
+        updated_network = self._update_network(admin=True)
+        self.assertEqual(updated_network['admin_state_up'], True)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="update_network:shared")
     @test.idempotent_id('37ea3e33-47d9-49fc-9bba-1af98fbd46d6')
     def test_update_network_shared(self):
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        updated_network = self._update_network(shared_network=True)
+        self.assertEqual(updated_network['shared'], True)
 
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            updated_network = self._update_network(shared_network=True)
-            self.assertEqual(updated_network['shared'], True)
-
-            # Revert back to False
-            updated_network = self._update_network(shared_network=False)
-            self.assertEqual(updated_network['shared'], False)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        # Revert back to False
+        updated_network = self._update_network(shared_network=False)
+        self.assertEqual(updated_network['shared'], False)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="update_network:router:external")
     @test.idempotent_id('34884c22-499b-4960-97f1-e2ed8522a9c9')
     def test_update_network_router_external(self):
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        updated_network = self._update_network(router_external=True)
+        self.assertEqual(updated_network['router:external'], True)
 
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            updated_network = self._update_network(router_external=True)
-            self.assertEqual(updated_network['router:external'], True)
-
-            # Revert back to False
-            updated_network = self._update_network(router_external=False)
-            self.assertEqual(updated_network['router:external'], False)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        # Revert back to False
+        updated_network = self._update_network(router_external=False)
+        self.assertEqual(updated_network['router:external'], False)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="get_network")
     @test.idempotent_id('0eb62d04-338a-4ff4-a8fa-534e52110534')
     def test_show_network(self):
-
         try:
             rbac_utils.switch_role(self, switchToRbacRole=True)
             # show a network that has been created during class setup
@@ -296,8 +266,6 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="get_network:router:external")
@@ -317,8 +285,6 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @testtools.skipIf(test.is_extension_enabled('contrail', 'network'),
                       "Contrail extension enabled. Test skipped")
@@ -342,8 +308,6 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
                                             "NotFound"), "NotFound")
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @testtools.skipIf(test.is_extension_enabled('contrail', 'network'),
                       "Contrail extension enabled. Test skipped")
@@ -368,8 +332,6 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @testtools.skipIf(test.is_extension_enabled('contrail', 'network'),
                       "Contrail extension enabled. Test skipped")
@@ -394,8 +356,6 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="delete_network")
@@ -410,25 +370,17 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
 
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
-
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="create_subnet")
     @test.idempotent_id('44f42aaf-8a9a-4678-868a-b8fe82689554')
     def test_create_subnet(self):
+        network = self._create_network()
+        self.assertEqual('ACTIVE', network['status'])
 
-        try:
-            network = self._create_network()
-            self.assertEqual('ACTIVE', network['status'])
-
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            # Create a subnet
-            subnet = self.create_subnet(network, enable_dhcp=False)
-            self.assertEqual(network['id'], subnet['network_id'])
-
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        # Create a subnet
+        subnet = self.create_subnet(network, enable_dhcp=False)
+        self.assertEqual(network['id'], subnet['network_id'])
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="get_subnet")
@@ -444,22 +396,16 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="update_subnet")
     @test.idempotent_id('1bfeaec5-83b9-4140-8138-93a0a9d04cee')
     def test_update_subnet(self):
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            body = self.subnets_client.update_subnet(self.admin_subnet['id'],
-                                             name="New_subnet")
-            updated_subnet = body['subnet']
-            self.assertEqual(updated_subnet['name'], "New_subnet")
-
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        body = self.subnets_client.update_subnet(self.admin_subnet['id'],
+                                         name="New_subnet")
+        updated_subnet = body['subnet']
+        self.assertEqual(updated_subnet['name'], "New_subnet")
 
     @rbac_rule_validation.action(component="Network", service="neutron",
                                  rule="delete_subnet")
@@ -487,5 +433,3 @@ class RbacNetworksTest(base.BaseNetworkRbacTest):
 
         except exceptions.NotFound as e:
             raise rbac_exceptions.RbacActionFailed(e)
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)

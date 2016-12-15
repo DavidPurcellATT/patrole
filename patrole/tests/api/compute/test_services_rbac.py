@@ -34,14 +34,15 @@ class RbacServicesTestJSON(rbac_base.BaseV2ComputeRbacTest):
         super(RbacServicesTestJSON, cls).setup_clients()
         cls.client = cls.services_client
 
+    def tearDown(self):
+        rbac_utils.switch_role(self, switchToRbacRole=False)
+        super(RbacServicesTestJSON, self).tearDown()
+
     @test.idempotent_id('ec55d455-bab2-4c36-b282-ae3af0efe287')
     @test.requires_ext(extension='os-services', service='compute')
     @rbac_rule_validation.action(
         component="Compute", service='nova',
         rule="compute_extension:services")
     def test_services_ext(self):
-        try:
-            rbac_utils.switch_role(self, switchToRbacRole=True)
-            self.client.list_services()
-        finally:
-            rbac_utils.switch_role(self, switchToRbacRole=False)
+        rbac_utils.switch_role(self, switchToRbacRole=True)
+        self.client.list_services()
