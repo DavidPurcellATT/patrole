@@ -17,6 +17,7 @@ import json
 import logging
 import six
 import urllib3
+import time
 
 from tempest import config
 
@@ -115,6 +116,9 @@ class RbacUtils(object):
             raise
         finally:
                 self.auth_provider.clear_auth()
+                #TODO: Make this not a hard-coded time.sleep()
+                # Hack to avoid periodic 401 errors after switching roles
+                time.sleep(1)
                 self.auth_provider.set_auth()
 
 rbac_utils = RbacUtils()
