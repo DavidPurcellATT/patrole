@@ -116,8 +116,9 @@ class RbacUtils(object):
             raise
         finally:
                 self.auth_provider.clear_auth()
-                #TODO: Make this not a hard-coded time.sleep()
-                # Hack to avoid periodic 401 errors after switching roles
+                # Keystone is not microsecond precise.
+                # Sleep to avoid 401 errors caused by rounding
+                # In timing of token creation
                 time.sleep(1)
                 self.auth_provider.set_auth()
 
