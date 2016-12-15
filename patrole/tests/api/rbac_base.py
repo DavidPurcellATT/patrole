@@ -11,16 +11,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+#Maybe these should be in lib or recreated?
 from tempest.api.compute import base as compute_base
 from tempest.api.image import base as image_base
 from tempest.api.network import base as network_base
 from tempest.api.volume import base as volume_base
 from tempest import config
 
+from patrole.rbac_utils import rbac_utils
 CONF = config.CONF
 
 #TODO: Make a base class that these inherit from
-#TODO: Base class should also have a cleanup that switches roles.
 class BaseV2ImageRbacTest(image_base.BaseV2ImageTest):
 
     credentials = ['primary', 'admin']
@@ -41,11 +42,6 @@ class BaseV2ImageRbacTest(image_base.BaseV2ImageTest):
         cls.auth_provider = cls.os.auth_provider
         cls.admin_client = cls.os_adm.image_client_v2
 
-    @classmethod
-    def clear_credentials(cls):
-        rbac_utils.switch_role(cls, switchToRbacRole=False)
-        super(BasicOperationsImagesRbacTest, cls).clear_credentials()
-
 class BaseNetworkRbacTest(network_base.BaseNetworkTest):
 
     credentials = ['primary', 'admin']
@@ -64,7 +60,7 @@ class BaseNetworkRbacTest(network_base.BaseNetworkTest):
     def setup_clients(cls):
         super(BaseNetworkRbacTest, cls).setup_clients()
         cls.auth_provider = cls.os.auth_provider
-        cls.admin_client = cls.os_adm.image_client_v2
+        cls.admin_client = cls.os_adm.agents_client
 
 class BaseVolumeRbacTest(volume_base.BaseVolumeTest):
 
@@ -105,7 +101,7 @@ class BaseV2ComputeRbacTest(compute_base.BaseV2ComputeTest):
     def setup_clients(cls):
         super(BaseV2ComputeRbacTest, cls).setup_clients()
         cls.auth_provider = cls.os.auth_provider
-        cls.admin_client = cls.os_adm.image_client_v2
+        cls.admin_client = cls.os_adm.agents_client
 
 #TODO: Probably delete this.
 class BaseV2ComputeAdminRbacTest(compute_base.BaseV2ComputeAdminTest):
@@ -126,4 +122,4 @@ class BaseV2ComputeAdminRbacTest(compute_base.BaseV2ComputeAdminTest):
     def setup_clients(cls):
         super(BaseV2ComputeAdminRbacTest, cls).setup_clients()
         cls.auth_provider = cls.os.auth_provider
-        cls.admin_client = cls.os_adm.image_client_v2
+        cls.admin_client = cls.os_adm.agents_client
